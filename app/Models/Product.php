@@ -15,4 +15,8 @@ class Product extends Model
         'image',
         'is_public',
     ];
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
