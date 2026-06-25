@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -21,8 +22,37 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $product = Product::create($request->all());
-        return response()->json($product, 201);
+        $request->validate([
+            'category_id' => 'required|integer',
+            'name'        => 'required|string|max:255',
+            'price'       => 'required|integer|min:0',
+            'information' => 'nullable|string',
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 💡画像チェック
+            'is_public'   => 'boolean',
+        ]);
+
+        $imagePath = null;
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $imagePath = $path;
+        }
+
+        $product = Product::create([
+            'category_id' => $request->category_id,
+            'name'        => $request->name,
+            'price'       => $request->price,
+            'information' => $request->information,
+            'stock'       => $request->stock,
+            'image'       => $imagePath,
+            'is_public'   => $request->is_public ?? true,
+        ]);
+
+        return response()->json([
+            'message' => '商品を登録しました！',
+            'product' => $product
+        ],);
     }
 
     /**
