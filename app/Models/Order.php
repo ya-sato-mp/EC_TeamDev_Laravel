@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+
     protected $fillable = ['user_id', 'total_price', 'ordered_at'];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
