@@ -14,14 +14,14 @@ class AuthController extends Controller
             'name' => 'required|max:50',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role' => 'required',
+            'role' => 'nullable|string',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => $request->password,
-            'role' => $request->role,
+            'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'user',
         ]);
 
         $token = $user->createToken('default')->plainTextToken;
@@ -41,10 +41,8 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => '認証失敗',
-            ], 401);
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => '認証失敗'], 401);
         }
 
         $token = $user->createToken('default')->plainTextToken;
