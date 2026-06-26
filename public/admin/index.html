@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>商品管理 | ドラちゃんオフィシャルショップ</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="products">
+    <header class="site-header">
+        <a class="brand" href="./index.html">ドラちゃんオフィシャルショップ 管理</a>
+        <nav class="nav">
+            <a href="./index.html">商品管理</a>
+            <a href="./orders.html">注文確認</a>
+            <a href="../shop/index.html">ショップ</a>
+            <button type="button" id="logoutButton">ログアウト</button>
+        </nav>
+    </header>
+
+    <main class="page">
+        <div class="page-head">
+            <div>
+                <p class="eyebrow">Products</p>
+                <h1>商品管理</h1>
+            </div>
+            <button class="secondary-button" type="button" id="reloadButton">再読み込み</button>
+        </div>
+
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+
+        <section class="layout">
+            <div class="form-stack">
+                <form id="productForm" class="panel form">
+                    <h2>商品を追加</h2>
+                    <label>
+                        カテゴリ
+                        <select name="category_id" required>
+                            <option value="1">ファッション (ID: 1)</option>
+                            <option value="2">PC・モバイル用品 (ID: 2)</option>
+                            <option value="3">生活雑貨 (ID: 3)</option>
+                            <option value="4">リビング・インテリア (ID: 4)</option>
+                            <option value="5">タオル (ID: 5)</option>
+                            <option value="6">キッチン・食器・ランチ (ID: 6)</option>
+                            <option value="7">トイ・ホビー (ID: 7)</option>
+                            <option value="8">ぬいぐるみ (ID: 8)</option>
+                            <option value="9">キーホルダー (ID: 9)</option>
+                            <option value="10">ステーショナリー (ID: 10)</option>
+                            <option value="11">食品 (ID: 11)</option>
+                            <option value="12">お買い物袋・その他 (ID: 12)</option>
+                        </select>
+                    </label>
+                    <label>
+                        商品名
+                        <input name="name" type="text" maxlength="255" placeholder="ドラえもんアクスタ" required>
+                    </label>
+                    <label>
+                        価格
+                        <input name="price" type="number" min="0" placeholder="1500" required>
+                    </label>
+                    <label>
+                        説明
+                        <textarea name="information" rows="4" placeholder="商品の説明"></textarea>
+                    </label>
+                    <label>
+                        在庫数
+                        <input name="stock" type="number" min="0" placeholder="10" required>
+                    </label>
+                    <label>
+                        商品画像
+                        <input name="image" type="file" accept="image/png,image/jpeg,image/gif">
+                    </label>
+                    <label class="check-row">
+                        <input name="is_public" type="checkbox" checked>
+                        表示する
+                    </label>
+                    <button class="primary-button" type="submit">商品を登録</button>
+                </form>
+
+                <form id="adminUserForm" class="panel form">
+                    <h2>管理者を追加</h2>
+                    <label>
+                        名前
+                        <input name="name" type="text" maxlength="50" placeholder="Admin User" required>
+                    </label>
+                    <label>
+                        メールアドレス
+                        <input name="email" type="email" placeholder="admin@example.com" required>
+                    </label>
+                    <label>
+                        パスワード
+                        <input name="password" type="password" minlength="6" placeholder="6文字以上" required>
+                    </label>
+                    <button class="primary-button" type="submit">管理者を追加</button>
+                </form>
+            </div>
+
+            <section class="panel">
+                <div class="section-head">
+                    <h2>登録商品</h2>
+                    <p id="countLabel" class="note"></p>
+                </div>
+                <div id="productsTable" class="table-wrap"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+</body>
+</html>

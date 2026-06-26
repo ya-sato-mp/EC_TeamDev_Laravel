@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>管理者ログイン | ドラちゃんオフィシャルショップ</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="login">
+    <header class="site-header simple">
+        <a class="brand" href="./login.html">ドラちゃんオフィシャルショップ 管理</a>
+    </header>
+
+    <main class="auth-page">
+        <section class="panel auth-card">
+            <p class="eyebrow">Admin</p>
+            <h1>管理者ログイン</h1>
+            <div id="message" class="message" role="status" aria-live="polite"></div>
+            <form id="loginForm" class="form">
+                <label>
+                    メールアドレス
+                    <input name="email" type="email" autocomplete="email" required>
+                </label>
+                <label>
+                    パスワード
+                    <input name="password" type="password" autocomplete="current-password" required>
+                </label>
+                <button class="primary-button" type="submit">ログイン</button>
+            </form>
+            <p class="note">管理者用の商品登録画面に入る.</p>
+        </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+</body>
+</html>
