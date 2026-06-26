@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login'])->name('api.login');
@@ -24,5 +25,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('orders', OrderController::class);
 
     Route::apiResource('admin/products', AdminProductController::class);
+    Route::post('/admin/users', [AdminUserController::class, 'store']);
     Route::post('/admin/orders', [AdminOrderController::class, 'store']);
 });

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\CartItem;
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -26,31 +28,46 @@ class OrderController extends Controller
             ], 400);
         }
 
-        $totalPrice = 0;
+        $order = DB::transaction(function () use ($request, $cartItems) {
+            $totalPrice = 0;
+            $products = [];
 
-        foreach ($cartItems as $cartItem) {
-            $product = Product::findOrFail($cartItem->product_id);
-            $totalPrice += $product->price * $cartItem->quantity;
-        }
+            foreach ($cartItems as $cartItem) {
+                $product = Product::lockForUpdate()->findOrFail($cartItem->product_id);
 
-        $order = Order::create([
-            'user_id' => $request->user_id,
-            'total_price' => $totalPrice,
-            'ordered_at' => now(),
-        ]);
+                if ($product->stock < $cartItem->quantity) {
+                    throw new HttpResponseException(response()->json([
+                        'message' => "{$product->name} の在庫が不足しています",
+                    ], 400));
+                }
 
-        foreach ($cartItems as $cartItem) {
-            $product = Product::findOrFail($cartItem->product_id);
+                $products[$cartItem->product_id] = $product;
+                $totalPrice += $product->price * $cartItem->quantity;
+            }
 
-            OrderDetail::create([
-                'order_id' => $order->id,
-                'product_id' => $product->id,
-                'quantity' => $cartItem->quantity,
-                'price' => $product->price,
+            $order = Order::create([
+                'user_id' => $request->user_id,
+                'total_price' => $totalPrice,
+                'ordered_at' => now(),
             ]);
-        }
 
-        CartItem::where('user_id', $request->user_id)->delete();
+            foreach ($cartItems as $cartItem) {
+                $product = $products[$cartItem->product_id];
+
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $product->price,
+                ]);
+
+                $product->decrement('stock', $cartItem->quantity);
+            }
+
+            CartItem::where('user_id', $request->user_id)->delete();
+
+            return $order;
+        });
 
         return response()->json($order, 201);
     }
