@@ -8,8 +8,6 @@ Commit Messageはyyyymmdd + 何時何分(24時間表記) + Update.md
 
 # ドラちゃんオフィシャルショップ 使い方
 
-## 結論
-
 このプロジェクトはLaravelのAPIをバックエンドに使い, `public/shop`と`public/admin`配下の静的HTML, CSS, JavaScriptで画面を動かす構成である.
 ローカルで確認する場合は, まず`php artisan serve --host=127.0.0.1 --port=8001`を実行し, 玄関口として`/shop/login.html`に入るのが基本である.
 
