@@ -12,21 +12,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-        foreach ([
-            'personal_access_tokens',
-            'order_details',
-            'orders',
-            'cart_items',
-            'products',
-            'categories',
-            'users',
-        ] as $table) {
+        foreach (
+            [
+                'personal_access_tokens',
+                'order_details',
+                'orders',
+                'cart_items',
+                'products',
+                'categories',
+                'users',
+            ] as $table
+        ) {
             DB::table($table)->delete();
         }
 
-        DB::statement('PRAGMA foreign_keys = ON;');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->call([
             UserSeeder::class,
