@@ -12,6 +12,7 @@ class CartItemSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach (SeedData::cartItems() as $cartItem) {
         $cartItems = [
             [
                 'id' => 1,

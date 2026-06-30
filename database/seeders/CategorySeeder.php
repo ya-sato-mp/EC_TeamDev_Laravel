@@ -12,6 +12,7 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        foreach (SeedData::categories() as $id => $name) {
         $categories = [
             1 => 'ファッション',
             2 => 'PC・モバイル用品',

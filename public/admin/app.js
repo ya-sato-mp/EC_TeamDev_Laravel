@@ -261,6 +261,48 @@ function renderProducts(products) {
                         </div>
                     </td>
                 </tr>
+            </thead>
+            <tbody>
+                ${products.map((product) => `
+                    <tr data-row="${escapeHtml(product.id)}">
+                        <td>${escapeHtml(product.id)}</td>
+                        <td>
+                            <div class="thumb">
+                                ${product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="">` : ''}
+                            </div>
+                            <input class="image-input" name="image" type="file" accept="image/png,image/jpeg,image/gif" aria-label="商品画像">
+                        </td>
+                        <td>
+                            <input name="name" type="text" value="${escapeHtml(product.name)}" aria-label="商品名">
+                            <textarea name="information" rows="2" aria-label="説明">${escapeHtml(product.information || '')}</textarea>
+                        </td>
+                        <td>
+                            ${categorySelect(product.category_id)}
+                            <p class="product-desc">現在: ${escapeHtml(categoryName(product.category_id))}</p>
+                        </td>
+                        <td><input name="price" type="number" min="0" value="${escapeHtml(product.price)}" aria-label="価格"></td>
+                        <td><input name="stock" type="number" min="0" value="${escapeHtml(product.stock)}" aria-label="在庫"></td>
+                        <td>
+                            <span class="status ${Number(product.is_public) ? '' : 'off'}">${Number(product.is_public) ? '表示' : '非表示'}</span>
+                            <label class="check-row">
+                                <input name="is_public" type="checkbox" ${Number(product.is_public) ? 'checked' : ''}>
+                                変更
+                            </label>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="small-button" type="button" data-update="${escapeHtml(product.id)}">保存</button>
+                                <button class="danger-button" type="button" data-delete="${escapeHtml(product.id)}">削除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    table.querySelectorAll('[data-update]').forEach((button) => {
+        button.addEventListener('click', () => updateProduct(button.dataset.update));
             `,
                 )
                 .join("")}
@@ -394,7 +436,22 @@ async function createAdminUser(form) {
 
 function rowValues(productId) {
     const row = document.querySelector(`[data-row="${CSS.escape(productId)}"]`);
+    const formData = new FormData();
 
+    formData.set('category_id', row.querySelector('[name="category_id"]').value || '1');
+    formData.set('name', row.querySelector('[name="name"]').value || '');
+    formData.set('price', row.querySelector('[name="price"]').value || '0');
+    formData.set('information', row.querySelector('[name="information"]').value || '');
+    formData.set('stock', row.querySelector('[name="stock"]').value || '0');
+    formData.set('is_public', row.querySelector('[name="is_public"]').checked ? '1' : '0');
+
+    const image = row.querySelector('[name="image"]').files[0];
+
+    if (image) {
+        formData.set('image', image);
+    }
+
+    return formData;
     return {
         category_id: Number(
             row.querySelector('[name="category_id"]').value || 1,
@@ -412,6 +469,8 @@ async function updateProduct(productId) {
 
     try {
         await apiFetch(`/api/admin/products/${encodeURIComponent(productId)}`, {
+            method: 'POST',
+            body: rowValues(productId),
             method: "PUT",
             body: JSON.stringify(rowValues(productId)),
         });
@@ -479,7 +538,36 @@ async function initOrders() {
     await refreshOrders();
 }
 
+function orderDetailsHtml(order) {
+    const details = order.details || [];
+
+    if (details.length === 0) {
+        return '<div class="order-details"><p class="muted">注文内容はありません.</p></div>';
+    }
+
+    return `
+        <div class="order-details">
+            ${details.map((detail) => {
+                const product = detail.product;
+                const subtotal = Number(detail.price || 0) * Number(detail.quantity || 0);
+
+                return `
+                    <div class="order-detail-row">
+                        <div>
+                            <strong>${escapeHtml(product?.name || `商品ID ${detail.product_id}`)}</strong>
+                            <p class="muted">商品ID ${escapeHtml(detail.product_id)} / 数量 ${escapeHtml(detail.quantity)} / 単価 ${price(detail.price)}</p>
+                        </div>
+                        <span class="price">${price(subtotal)}</span>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
 async function refreshOrders() {
+    const list = document.querySelector('#ordersList');
+    setMessage('注文を読み込み中です.');
     const wrap = document.querySelector("#ordersTable");
     setMessage("注文を読み込み中です.");
 
@@ -490,6 +578,37 @@ async function refreshOrders() {
             .sort((a, b) => Number(b.id) - Number(a.id));
 
         if (sorted.length === 0) {
+            list.innerHTML = '<div class="empty">注文はまだありません.</div>';
+            setMessage('');
+            return;
+        }
+
+        list.innerHTML = sorted.map((order) => `
+            <article class="order-item">
+                <button class="order-summary" type="button" data-order-toggle="${escapeHtml(order.id)}">
+                    <div>
+                        <h3>注文ID ${escapeHtml(order.id)}</h3>
+                        <p class="muted">
+                            ユーザー ${escapeHtml(order.user?.name || `ID ${order.user_id}`)} (ID: ${escapeHtml(order.user_id)})
+                            / 注文日時 ${escapeHtml(order.ordered_at || order.created_at || '-')}
+                        </p>
+                    </div>
+                    <p class="price">${price(order.total_price)}</p>
+                </button>
+                <div class="is-hidden" data-order-details="${escapeHtml(order.id)}">
+                    ${orderDetailsHtml(order)}
+                </div>
+            </article>
+        `).join('');
+
+        list.querySelectorAll('[data-order-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const detail = list.querySelector(`[data-order-details="${CSS.escape(button.dataset.orderToggle)}"]`);
+                detail?.classList.toggle('is-hidden');
+            });
+        });
+
+        setMessage('');
             wrap.innerHTML = '<div class="empty">注文はまだありません.</div>';
             setMessage("");
             return;

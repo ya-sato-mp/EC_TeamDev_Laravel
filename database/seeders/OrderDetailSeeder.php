@@ -12,6 +12,7 @@ class OrderDetailSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach (SeedData::orderDetails() as $orderDetail) {
         $orderDetails = [
             [
                 'id' => 1,

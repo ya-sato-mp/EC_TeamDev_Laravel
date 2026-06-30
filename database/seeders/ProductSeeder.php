@@ -12,6 +12,7 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach (SeedData::products() as $product) {
         $products = [
             [
                 'id' => 1,

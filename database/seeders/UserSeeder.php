@@ -13,6 +13,15 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach (SeedData::users() as $user) {
+            User::updateOrCreate(
+                ['id' => $user['id']],
+                [
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'password' => bcrypt($user['password']),
+                    'role' => $user['role'],
+                ],
         $users = [
             [
                 'id' => 1,
