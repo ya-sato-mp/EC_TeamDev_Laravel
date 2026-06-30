@@ -19,6 +19,34 @@ Laravel研修用の `Doraemon_EC` プロジェクトである.
 - 画像を扱う前に `php artisan storage:link` を実行する.
 
 ## 命名規則
+このプロジェクトはLaravelのAPIをバックエンドに使い, `public/shop`と`public/admin`配下の静的HTML, CSS, JavaScriptで画面を動かす構成である.
+ローカルで確認する場合は, まず`php artisan serve --host=127.0.0.1 --port=8001`を実行し, 玄関口として`/shop/login.html`に入るのが基本である.
+
+## 起動手順
+
+プロジェクトルートで以下を実行する.
+
+```bash
+composer install
+php artisan storage:link
+php artisan serve --host=127.0.0.1 --port=8001
+```
+
+補足は以下である.
+
+- `composer install`
+  - PHP依存関係を入れる.
+- `php artisan storage:link`
+  - 商品画像を`/storage/...`で配信するために必要である.
+- `php artisan serve --host=127.0.0.1 --port=8001`
+  - ローカル確認用サーバを起動する.
+
+起動後の確認URLは以下である.
+
+- 共通の入口
+  - [http://127.0.0.1:8001/shop/login.html](http://127.0.0.1:8001/shop/login.html)
+- 管理者ログイン画面
+  - [http://127.0.0.1:8001/admin/login.html](http://127.0.0.1:8001/admin/login.html)
 
 - PJ名 `Doraemon_EC`
 - テーブル名は複数形で統一する.

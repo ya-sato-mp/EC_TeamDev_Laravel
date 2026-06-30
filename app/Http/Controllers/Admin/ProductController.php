@@ -71,6 +71,7 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
+        $request->validate([
             'category_id' => 'required|integer',
             'name'        => 'required|string|max:255',
             'price'       => 'required|integer|min:0',
@@ -79,6 +80,17 @@ class ProductController extends Controller
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_public'   => 'boolean',
         ]);
+
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 画像チェック
+            'is_public'   => 'boolean',
+        ]);
+
+        $product->category_id = $request->category_id;
+        $product->name        = $request->name;
+        $product->price       = $request->price;
+        $product->information = $request->information;
+        $product->stock       = $request->stock;
+        $product->is_public   = $request->is_public ?? true;
 
         if ($request->hasFile('image')) {
             if ($product->image) {
@@ -91,6 +103,16 @@ class ProductController extends Controller
         $product->update($validated);
 
         return response()->json($product->fresh());
+            $path = $request->file('image')->store('products', 'public');
+            $product->image = $path;
+        }
+
+        $product->save();
+
+        return response()->json([
+            'message' => '商品を更新しました！',
+            'product' => $product
+        ]);
     }
 
     /**

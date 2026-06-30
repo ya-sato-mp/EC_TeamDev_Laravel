@@ -150,3 +150,7 @@ php artisan route:list
 ```
 
 `storage:link`はストレージ公開用のシンボリックリンク作成コマンドである. `migrate:fresh --seed`はDBを作り直して初期データまで入れ直すコマンドである. `route:list`はLaravelに登録されているルート一覧確認コマンドである.
+php artisan route:list
+```
+
+`storage:link`はストレージ公開用のシンボリックリンク作成コマンドである. `route:list`はLaravelに登録されているルート一覧確認コマンドである.

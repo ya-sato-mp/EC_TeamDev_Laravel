@@ -32,6 +32,23 @@ class DatabaseSeeder extends Seeder
         }
 
         Schema::enableForeignKeyConstraints();
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        foreach (
+            [
+                'personal_access_tokens',
+                'order_details',
+                'orders',
+                'cart_items',
+                'products',
+                'categories',
+                'users',
+            ] as $table
+        ) {
+            DB::table($table)->delete();
+        }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->call([
             UserSeeder::class,
