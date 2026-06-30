@@ -15,7 +15,19 @@ class OrderController extends Controller
 {
     public function index()
     {
-        return Order::all();
+        $orders = Order::with('user')->get();
+
+        $formattedOrders = $orders->map(function ($order) {
+            return [
+                'id'          => $order->id,
+                'user_id'     => $order->user_id,
+                'user_name'   => $order->user ? $order->user->name : '不明なユーザー',
+                'total_price' => $order->total_price,
+                'ordered_at'  => $order->ordered_at ?? ($order->created_at ? $order->created_at->toDateTimeString() : '-'),
+            ];
+        });
+
+        return response()->json($formattedOrders);
     }
 
     public function store(Request $request)
