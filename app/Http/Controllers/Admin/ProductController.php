@@ -69,8 +69,28 @@ class ProductController extends Controller
     public function update(Request $request, string $id)
     {
         $product = Product::findOrFail($id);
-        $product->update($request->all());
-        return response()->json($product);
+
+        $validated = $request->validate([
+            'category_id' => 'required|integer',
+            'name'        => 'required|string|max:255',
+            'price'       => 'required|integer|min:0',
+            'information' => 'nullable|string',
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_public'   => 'boolean',
+        ]);
+
+        if ($request->hasFile('image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($validated);
+
+        return response()->json($product->fresh());
     }
 
     /**

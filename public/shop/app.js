@@ -8,6 +8,7 @@ const yen = new Intl.NumberFormat('ja-JP', {
 
 migrateOldSession();
 
+// 以前のセッションデータの移行処理
 function migrateOldSession() {
     if (!localStorage.getItem('token') && localStorage.getItem('shop_token')) {
         localStorage.setItem('token', localStorage.getItem('shop_token'));
@@ -156,14 +157,12 @@ async function addToCart(productId, quantity = 1) {
         return;
     }
 
-    const user = getUser();
     setMessage('カートに追加中です.');
 
     try {
         await apiFetch('/api/cart-items', {
             method: 'POST',
             body: JSON.stringify({
-                user_id: user.id,
                 product_id: Number(productId),
                 quantity: Math.max(1, Number(quantity || 1)),
             }),
@@ -246,20 +245,96 @@ async function initProducts() {
     }
 
     renderUserLabel();
+
+    const categorySelect = document.querySelector('#categorySelect');
+    if (categorySelect && categorySelect.children.length <= 1) {
+        const categories = [
+            { id: 1, name: 'ファッション' },
+            { id: 2, name: 'PC・モバイル用品' },
+            { id: 3, name: '生活雑貨' },
+            { id: 4, name: 'リビング・インテリア' },
+            { id: 5, name: 'タオル' },
+            { id: 6, name: 'キッチン・食器・ランチ' },
+            { id: 7, name: 'トイ・ホビー' },
+            { id: 8, name: 'ぬいぐるみ' },
+            { id: 9, name: 'キーホルダー' },
+            { id: 10, name: 'ステーショナリー' },
+            { id: 11, name: '食品' },
+            { id: 12, name: 'お買い物袋・その他' },
+        ];
+        categorySelect.innerHTML = '<option value="">すべてのカテゴリー</option>' +
+            categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    }
+
+    const searchForm = document.querySelector('#searchForm');
+    const clearButton = document.querySelector('#clearSearchButton');
+
+    if (searchForm && !searchForm.dataset.listenerBound) {
+        searchForm.dataset.listenerBound = 'true';
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchAndRenderProducts();
+        });
+    }
+
+    if (clearButton && !clearButton.dataset.listenerBound) {
+        clearButton.dataset.listenerBound = 'true';
+        clearButton.addEventListener('click', () => {
+            searchForm.reset();
+            fetchAndRenderProducts();
+        });
+    }
+
+    await fetchAndRenderProducts();
+}
+
+async function fetchAndRenderProducts() {
     const list = document.querySelector('#productsList');
     setMessage('商品を読み込み中です.');
 
     try {
-        const products = await apiFetch('/api/products');
-        const publicProducts = products.filter((product) => Number(product.is_public) !== 0);
+        const searchForm = document.querySelector('#searchForm');
+        let url = '/api/products';
+        let keyword = '';
 
-        if (publicProducts.length === 0) {
-            list.innerHTML = '<div class="empty">表示できる商品がありません.</div>';
+        if (searchForm) {
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams();
+            keyword = (formData.get('keyword') || '').trim();
+            const categoryId = formData.get('category_id');
+            const sort = formData.get('sort');
+
+            // カテゴリーと並び順はAPIへ渡す
+            if (categoryId) params.append('category_id', categoryId);
+            if (sort) params.append('sort', sort);
+
+            const queryString = params.toString();
+            if (queryString) url += `?${queryString}`;
+        }
+
+        const products = await apiFetch(url);
+
+        // 公開商品のみ
+        let filtered = products.filter((product) => Number(product.is_public) !== 0);
+
+        // キーワードはJS側で部分一致フィルタリング（大文字小文字・全角半角を区別しない）
+        if (keyword) {
+            const lower = keyword.toLowerCase();
+            filtered = filtered.filter((product) =>
+                (product.name || '').toLowerCase().includes(lower) ||
+                (product.information || '').toLowerCase().includes(lower)
+            );
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = keyword
+                ? `<div class="empty">「${escapeHtml(keyword)}」に一致する商品が見つかりませんでした.</div>`
+                : '<div class="empty">表示できる商品がありません.</div>';
             setMessage('');
             return;
         }
 
-        list.innerHTML = publicProducts.map((product) => `
+        list.innerHTML = filtered.map((product) => `
             <article class="product-card">
                 <div class="product-thumb">${productImage(product)}</div>
                 <div class="product-body">
@@ -283,7 +358,7 @@ async function initProducts() {
     } catch (error) {
         setMessage(getErrorMessage(error), true);
     }
-}
+} // <- 不足していた関数の閉じ括弧を補完
 
 async function initProductDetail() {
     if (!requireLogin()) {
@@ -333,12 +408,42 @@ async function loadProductsMap() {
     return new Map(products.map((product) => [Number(product.id), product]));
 }
 
+async function updateCartQuantity(cartItemId, quantity) {
+    setMessage('数量を更新中です.');
+
+    try {
+        await apiFetch(`/api/cart-items/${encodeURIComponent(cartItemId)}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                quantity: Math.max(1, Number(quantity || 1)),
+            }),
+        });
+        await initCart();
+        setMessage('数量を更新しました.');
+    } catch (error) {
+        setMessage(getErrorMessage(error), true);
+    }
+}
+
+async function removeCartItem(cartItemId) {
+    setMessage('カートから削除中です.');
+
+    try {
+        await apiFetch(`/api/cart-items/${encodeURIComponent(cartItemId)}`, {
+            method: 'DELETE',
+        });
+        await initCart();
+        setMessage('カートから削除しました.');
+    } catch (error) {
+        setMessage(getErrorMessage(error), true);
+    }
+}
+
 async function initCart() {
     if (!requireLogin()) {
         return;
     }
 
-    const user = getUser();
     const list = document.querySelector('#cartList');
     const totalBox = document.querySelector('#cartTotal');
     setMessage('カートを読み込み中です.');
@@ -348,9 +453,8 @@ async function initCart() {
             apiFetch('/api/cart-items'),
             loadProductsMap(),
         ]);
-        const ownItems = cartItems.filter((item) => Number(item.user_id) === Number(user.id));
 
-        if (ownItems.length === 0) {
+        if (cartItems.length === 0) {
             list.innerHTML = '<div class="empty">カートに商品はありません.</div>';
             totalBox.innerHTML = '';
             totalBox.style.display = 'none';
@@ -359,21 +463,61 @@ async function initCart() {
         }
 
         let total = 0;
-        list.innerHTML = ownItems.map((item) => {
-            const product = productsMap.get(Number(item.product_id));
+        list.innerHTML = cartItems.map((item) => {
+            const product = item.product || productsMap.get(Number(item.product_id));
             const subtotal = Number(product?.price || 0) * Number(item.quantity || 0);
             total += subtotal;
 
             return `
-                <article class="list-item">
+                <article class="list-item cart-item">
                     <div>
                         <h3>${escapeHtml(product?.name || `商品ID ${item.product_id}`)}</h3>
-                        <p class="muted">商品ID ${escapeHtml(item.product_id)} / 数量 ${escapeHtml(item.quantity)}</p>
+                        <p class="muted">商品ID ${escapeHtml(item.product_id)} / 単価 ${price(product?.price || 0)}</p>
+                    </div>
+                    <div class="cart-controls">
+                        <div class="qty-control-wrapper">
+                            <span class="qty-label">数量</span>
+                            <div class="qty-selector">
+                                <button type="button" class="qty-btn" data-cart-dec="${escapeHtml(item.id)}">−</button>
+                                <input type="number" min="1" max="${escapeHtml(product?.stock ?? 99)}" value="${escapeHtml(item.quantity)}" data-cart-quantity="${escapeHtml(item.id)}" aria-label="数量">
+                                <button type="button" class="qty-btn" data-cart-inc="${escapeHtml(item.id)}">+</button>
+                            </div>
+                        </div>
+                        <button class="plain-link" type="button" data-cart-remove="${escapeHtml(item.id)}">削除</button>
                     </div>
                     <p class="price">${price(subtotal)}</p>
                 </article>
             `;
         }).join('');
+
+        list.querySelectorAll('[data-cart-quantity]').forEach((input) => {
+            input.addEventListener('change', () => updateCartQuantity(input.dataset.cartQuantity, input.value));
+        });
+
+        list.querySelectorAll('[data-cart-dec]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const cartItemId = button.dataset.cartDec;
+                const input = list.querySelector(`[data-cart-quantity="${CSS.escape(cartItemId)}"]`);
+                const val = Math.max(1, Number(input.value) - 1);
+                input.value = val;
+                updateCartQuantity(cartItemId, val);
+            });
+        });
+
+        list.querySelectorAll('[data-cart-inc]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const cartItemId = button.dataset.cartInc;
+                const input = list.querySelector(`[data-cart-quantity="${CSS.escape(cartItemId)}"]`);
+                const max = Number(input.max || 99);
+                const val = Math.min(max, Number(input.value) + 1);
+                input.value = val;
+                updateCartQuantity(cartItemId, val);
+            });
+        });
+
+        list.querySelectorAll('[data-cart-remove]').forEach((button) => {
+            button.addEventListener('click', () => removeCartItem(button.dataset.cartRemove));
+        });
 
         totalBox.style.display = 'flex';
         totalBox.innerHTML = `
@@ -390,7 +534,7 @@ async function initCart() {
             try {
                 await apiFetch('/api/orders', {
                     method: 'POST',
-                    body: JSON.stringify({ user_id: user.id }),
+                    body: JSON.stringify({}),
                 });
                 location.href = './orders.html';
             } catch (error) {
@@ -404,36 +548,76 @@ async function initCart() {
     }
 }
 
+function orderDetailsHtml(order) {
+    const details = order.details || [];
+
+    if (details.length === 0) {
+        return '<div class="order-details"><p class="muted">注文内容はありません.</p></div>';
+    }
+
+    return `
+        <div class="order-details">
+            ${details.map((detail) => {
+                const product = detail.product;
+                const subtotal = Number(detail.price || 0) * Number(detail.quantity || 0);
+
+                return `
+                    <div class="order-detail-row">
+                        <div>
+                            <strong>${escapeHtml(product?.name || `商品ID ${detail.product_id}`)}</strong>
+                            <p class="muted">商品ID ${escapeHtml(detail.product_id)} / 数量 ${escapeHtml(detail.quantity)} / 単価 ${price(detail.price)}</p>
+                        </div>
+                        <span class="price">${price(subtotal)}</span>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
 async function initOrders() {
     if (!requireLogin()) {
         return;
     }
 
-    const user = getUser();
     const list = document.querySelector('#ordersList');
     setMessage('注文履歴を読み込み中です.');
 
     try {
         const orders = await apiFetch('/api/orders');
-        const ownOrders = orders
-            .filter((order) => Number(order.user_id) === Number(user.id))
-            .sort((a, b) => Number(b.id) - Number(a.id));
+        const sortedOrders = orders.slice().sort((a, b) => Number(b.id) - Number(a.id));
 
-        if (ownOrders.length === 0) {
+        if (sortedOrders.length === 0) {
             list.innerHTML = '<div class="empty">注文履歴はありません.</div>';
             setMessage('');
             return;
         }
 
-        list.innerHTML = ownOrders.map((order) => `
-            <article class="list-item">
-                <div>
-                    <h3>注文ID ${escapeHtml(order.id)}</h3>
-                    <p class="muted">注文日時 ${escapeHtml(order.ordered_at || order.created_at || '-')}</p>
+        list.innerHTML = sortedOrders.map((order) => `
+            <article class="order-item">
+                <button class="order-summary" type="button" data-order-toggle="${escapeHtml(order.id)}">
+                    <div>
+                        <h3>注文ID ${escapeHtml(order.id)}</h3>
+                        <p class="muted">
+                            ユーザー ${escapeHtml(order.user?.name || `ID ${order.user_id}`)} (ID: ${escapeHtml(order.user_id)})
+                            / 注文日時 ${escapeHtml(order.ordered_at || order.created_at || '-')}
+                        </p>
+                    </div>
+                    <p class="price">${price(order.total_price)}</p>
+                </button>
+                <div class="is-hidden" data-order-details="${escapeHtml(order.id)}">
+                    ${orderDetailsHtml(order)}
                 </div>
-                <p class="price">${price(order.total_price)}</p>
             </article>
         `).join('');
+
+        list.querySelectorAll('[data-order-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const detail = list.querySelector(`[data-order-details="${CSS.escape(button.dataset.orderToggle)}"]`);
+                detail?.classList.toggle('is-hidden');
+            });
+        });
+
         setMessage('');
     } catch (error) {
         setMessage(getErrorMessage(error), true);

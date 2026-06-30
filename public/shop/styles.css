@@ -332,6 +332,60 @@ input {
     padding: 16px;
 }
 
+.cart-item {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.cart-controls {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+}
+
+.cart-controls label {
+    width: 86px;
+}
+
+.cart-controls input {
+    min-height: 36px;
+}
+
+.order-item {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.order-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+    width: 100%;
+    border: 0;
+    padding: 16px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+}
+
+.order-details {
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    padding: 14px 16px 16px;
+    background: #fbfcfe;
+}
+
+.order-detail-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
 .total-box {
     display: flex;
     align-items: center;
@@ -359,7 +413,125 @@ input {
     }
 
     .product-grid,
-    .detail-panel {
+    .detail-panel,
+    .cart-item,
+    .order-summary,
+    .order-detail-row {
         grid-template-columns: 1fr;
     }
+
+    .cart-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
 }
+
+.qty-control-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.qty-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+.qty-selector {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    width: fit-content;
+}
+
+.qty-selector button {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+}
+
+.qty-selector button:hover {
+    background: #f3f6f9;
+}
+
+.qty-selector input {
+    width: 50px;
+    height: 36px;
+    min-height: 36px !important;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    -moz-appearance: textfield;
+}
+
+.qty-selector input::-webkit-outer-spin-button,
+.qty-selector input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.search-panel {
+    margin-bottom: 24px;
+    padding: 20px;
+}
+
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+.search-field {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.search-field label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+.search-actions {
+    display: flex;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.search-actions button {
+    height: 40px;
+    min-height: 40px;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .search-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-actions {
+        margin-top: 8px;
+        justify-content: flex-end;
+    }
+}
+
+

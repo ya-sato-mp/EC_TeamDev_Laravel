@@ -12,31 +12,7 @@ class OrderDetailSeeder extends Seeder
      */
     public function run(): void
     {
-        $orderDetails = [
-            [
-                'id' => 1,
-                'order_id' => 1,
-                'product_id' => 2,
-                'quantity' => 1,
-                'price' => 1200,
-            ],
-            [
-                'id' => 2,
-                'order_id' => 1,
-                'product_id' => 4,
-                'quantity' => 2,
-                'price' => 750,
-            ],
-            [
-                'id' => 3,
-                'order_id' => 2,
-                'product_id' => 3,
-                'quantity' => 1,
-                'price' => 4800,
-            ],
-        ];
-
-        foreach ($orderDetails as $orderDetail) {
+        foreach (SeedData::orderDetails() as $orderDetail) {
             OrderDetail::updateOrCreate(
                 ['id' => $orderDetail['id']],
                 $orderDetail,

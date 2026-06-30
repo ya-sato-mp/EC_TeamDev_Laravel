@@ -13,14 +13,23 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Order::all();
+        $user = $request->user();
+
+        if ($user?->role === 'admin') {
+            return Order::with(['user', 'details.product'])->get();
+        }
+
+        return Order::with(['user', 'details.product'])
+            ->where('user_id', $user->id)
+            ->get();
     }
 
     public function store(Request $request)
     {
-        $cartItems = CartItem::where('user_id', $request->user_id)->get();
+        $user = $request->user();
+        $cartItems = CartItem::where('user_id', $user->id)->get();
 
         if ($cartItems->isEmpty()) {
             return response()->json([
@@ -28,7 +37,7 @@ class OrderController extends Controller
             ], 400);
         }
 
-        $order = DB::transaction(function () use ($request, $cartItems) {
+        $order = DB::transaction(function () use ($cartItems, $user) {
             $totalPrice = 0;
             $products = [];
 
@@ -46,7 +55,7 @@ class OrderController extends Controller
             }
 
             $order = Order::create([
-                'user_id' => $request->user_id,
+                'user_id' => $user->id,
                 'total_price' => $totalPrice,
                 'ordered_at' => now(),
             ]);
@@ -64,7 +73,7 @@ class OrderController extends Controller
                 $product->decrement('stock', $cartItem->quantity);
             }
 
-            CartItem::where('user_id', $request->user_id)->delete();
+            CartItem::where('user_id', $user->id)->delete();
 
             return $order;
         });
@@ -72,9 +81,16 @@ class OrderController extends Controller
         return response()->json($order, 201);
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        return Order::findOrFail($id);
+        $order = Order::with(['user', 'details.product'])->findOrFail($id);
+        $user = $request->user();
+
+        if ($user?->role !== 'admin' && $order->user_id !== $user->id) {
+            return response()->json(['message' => '権限がありません'], 403);
+        }
+
+        return $order;
     }
 
     public function update(Request $request, string $id)

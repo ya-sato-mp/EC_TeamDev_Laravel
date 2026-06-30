@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('cart-items', CartItemController::class);
     Route::apiResource('orders', OrderController::class);
 
+    Route::post('/admin/products/{id}', [AdminProductController::class, 'update']);
     Route::apiResource('admin/products', AdminProductController::class);
     Route::post('/admin/users', [AdminUserController::class, 'store']);
     Route::post('/admin/orders', [AdminOrderController::class, 'store']);

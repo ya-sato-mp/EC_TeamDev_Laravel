@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
+        Schema::disableForeignKeyConstraints();
 
         foreach ([
             'personal_access_tokens',
@@ -26,7 +27,11 @@ class DatabaseSeeder extends Seeder
             DB::table($table)->delete();
         }
 
-        DB::statement('PRAGMA foreign_keys = ON;');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("DELETE FROM sqlite_sequence WHERE name IN ('personal_access_tokens', 'order_details', 'orders', 'cart_items', 'products', 'categories', 'users')");
+        }
+
+        Schema::enableForeignKeyConstraints();
 
         $this->call([
             UserSeeder::class,

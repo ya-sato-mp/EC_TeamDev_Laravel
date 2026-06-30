@@ -28,6 +28,33 @@
         </div>
 
         <div id="message" class="message" role="status" aria-live="polite"></div>
+
+        <section class="search-panel panel">
+            <form id="searchForm" class="search-form">
+                <div class="search-field">
+                    <label for="keywordInput">キーワード</label>
+                    <input type="search" id="keywordInput" name="keyword" placeholder="商品名で検索...">
+                </div>
+                <div class="search-field">
+                    <label for="categorySelect">カテゴリー</label>
+                    <select id="categorySelect" name="category_id">
+                        <option value="">すべてのカテゴリー</option>
+                    </select>
+                </div>
+                <div class="search-field">
+                    <label for="sortSelect">並び順</label>
+                    <select id="sortSelect" name="sort">
+                        <option value="">標準</option>
+                        <option value="newest">新着順</option>
+                    </select>
+                </div>
+                <div class="search-actions">
+                    <button type="submit" class="primary-button">検索</button>
+                    <button type="button" id="clearSearchButton" class="secondary-button">クリア</button>
+                </div>
+            </form>
+        </section>
+
         <section id="productsList" class="product-grid"></section>
     </main>
 

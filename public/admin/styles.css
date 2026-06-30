@@ -30,6 +30,7 @@ a {
 
 button,
 input,
+select,
 textarea {
     font: inherit;
 }
@@ -179,6 +180,7 @@ label {
 }
 
 input,
+select,
 textarea {
     width: 100%;
     border: 1px solid var(--line);
@@ -194,6 +196,7 @@ input {
 
 textarea {
     resize: vertical;
+    min-height: 70px;
 }
 
 .check-row {
@@ -275,7 +278,7 @@ textarea {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 760px;
+    min-width: 980px;
 }
 
 th,
@@ -293,8 +296,26 @@ th {
 }
 
 td input,
+td select,
 td textarea {
-    min-width: 90px;
+    min-width: 88px;
+}
+
+td textarea {
+    min-width: 220px;
+    max-height: 90px;
+}
+
+td [name="name"] {
+    margin-bottom: 8px;
+    min-width: 220px;
+}
+
+.image-input {
+    margin-top: 8px;
+    max-width: 150px;
+    padding: 6px;
+    font-size: 12px;
 }
 
 .product-name {
@@ -310,8 +331,8 @@ td textarea {
 }
 
 .thumb {
-    width: 54px;
-    height: 54px;
+    width: 70px;
+    height: 70px;
     border-radius: 8px;
     background:
         radial-gradient(circle at 50% 45%, #fff 0 15px, transparent 16px),
@@ -365,3 +386,53 @@ td textarea {
         grid-template-columns: 1fr;
     }
 }
+
+.list {
+    display: grid;
+    gap: 14px;
+}
+
+.order-item {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.order-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+    width: 100%;
+    border: 0;
+    padding: 16px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+}
+
+.order-details {
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    padding: 14px 16px 16px;
+    background: #fbfcfe;
+}
+
+.order-detail-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.is-hidden {
+    display: none !important;
+}
+
+.muted {
+    color: var(--muted);
+}
+
